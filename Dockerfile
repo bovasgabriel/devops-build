@@ -1,15 +1,21 @@
-# Stage 1 - build
-FROM node:18-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+# Use official Nginx image
+FROM nginx:alpine
 
-# Stage 2 - serve with nginx
-FROM nginx:stable-alpine
-COPY --from=build /app/build /usr/share/nginx/html
-# custom nginx config to support SPA routing
+# Set working dir
+WORKDIR /usr/share/nginx/html
+
+# Remove default nginx static assets
+RUN rm -rf ./*
+
+# Copy build output to nginx
+COPY build/ .
+
+# Copy custom Nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
 EXPOSE 80
+
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
+
